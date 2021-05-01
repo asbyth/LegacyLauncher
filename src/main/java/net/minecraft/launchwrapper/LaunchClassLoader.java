@@ -1,40 +1,50 @@
 package net.minecraft.launchwrapper;
 
-import java.io.*;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.security.CodeSigner;
 import java.security.CodeSource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.jar.Attributes;
-import java.util.jar.Attributes.Name;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-
 public class LaunchClassLoader extends URLClassLoader {
     public static final int BUFFER_SIZE = 1 << 12;
-    private List<URL> sources;
-    private ClassLoader parent = getClass().getClassLoader();
+    private final List<URL> sources;
+    private final ClassLoader parent = getClass().getClassLoader();
 
-    private List<IClassTransformer> transformers = new ArrayList<IClassTransformer>(2);
-    private Map<String, Class<?>> cachedClasses = new ConcurrentHashMap<String, Class<?>>();
-    private Set<String> invalidClasses = new HashSet<String>(1000);
+    private final List<IClassTransformer> transformers = new ArrayList<>(2);
+    private final Map<String, Class<?>> cachedClasses = new ConcurrentHashMap<>();
+    private final Set<String> invalidClasses = new HashSet<>(1000);
 
-    private Set<String> classLoaderExceptions = new HashSet<String>();
-    private Set<String> transformerExceptions = new HashSet<String>();
-    private Map<String,byte[]> resourceCache = new ConcurrentHashMap<String,byte[]>(1000);
-    private Set<String> negativeResourceCache = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+    private final Set<String> classLoaderExceptions = new HashSet<>();
+    private final Set<String> transformerExceptions = new HashSet<>();
+    private final Map<String, byte[]> resourceCache = new ConcurrentHashMap<>(1000);
+    private final Set<String> negativeResourceCache = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private IClassNameTransformer renameTransformer;
 
-    private final ThreadLocal<byte[]> loadBuffer = new ThreadLocal<byte[]>();
+    private final ThreadLocal<byte[]> loadBuffer = new ThreadLocal<>();
 
     private static final String[] RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"};
 
@@ -45,7 +55,7 @@ public class LaunchClassLoader extends URLClassLoader {
 
     public LaunchClassLoader(URL[] sources) {
         super(sources, null);
-        this.sources = new ArrayList<URL>(Arrays.asList(sources));
+        this.sources = new ArrayList<>(Arrays.asList(sources));
 
         // classloader exclusions
         addClassLoaderExclusion("java.");
@@ -152,8 +162,6 @@ public class LaunchClassLoader extends URLClassLoader {
                         } else {
                             if (pkg.isSealed() && !pkg.isSealed(jarURLConnection.getJarFileURL())) {
                                 LogWrapper.severe("The jar file %s is trying to seal already secured path %s", jarFile.getName(), packageName);
-                            } else if (isSealed(packageName, manifest)) {
-                                LogWrapper.severe("The jar file %s has a security seal for path %s, but that path is defined and not secure", jarFile.getName(), packageName);
                             }
                         }
                     }
@@ -205,9 +213,9 @@ public class LaunchClassLoader extends URLClassLoader {
         try {
             LogWrapper.fine("Saving transformed class \"%s\" to \"%s\"", transformedName, outFile.getAbsolutePath().replace('\\', '/'));
 
-            final OutputStream output = new FileOutputStream(outFile);
-            output.write(data);
-            output.close();
+            try (final OutputStream output = new FileOutputStream(outFile)) {
+                output.write(data);
+            }
         } catch (IOException ex) {
             LogWrapper.log(Level.WARN, ex, "Could not save transformed class \"%s\"", transformedName);
         }
@@ -227,22 +235,6 @@ public class LaunchClassLoader extends URLClassLoader {
         }
 
         return name;
-    }
-
-    private boolean isSealed(final String path, final Manifest manifest) {
-        Attributes attributes = manifest.getAttributes(path);
-        String sealed = null;
-        if (attributes != null) {
-            sealed = attributes.getValue(Name.SEALED);
-        }
-
-        if (sealed == null) {
-            attributes = manifest.getMainAttributes();
-            if (attributes != null) {
-                sealed = attributes.getValue(Name.SEALED);
-            }
-        }
-        return "true".equalsIgnoreCase(sealed);
     }
 
     private URLConnection findCodeSourceConnectionFor(final String name) {

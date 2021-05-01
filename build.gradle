@@ -12,7 +12,7 @@ repositories {
 group = 'net.minecraft'
 archivesBaseName = 'launchwrapper'
 version = '1.12'
-sourceCompatibility = 1.6
+targetCompatibility = sourceCompatibility = 1.8
 
 dependencies {
     compile 'net.sf.jopt-simple:jopt-simple:4.5'
@@ -34,27 +34,3 @@ artifacts {
 
 def repoDir = new File(projectDir, "repo")
 repoDir.mkdirs()
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            repository(url: "file://" + repoDir.absolutePath)
-
-            pom.project {
-                description 'Minecraft LegacyLauncher'
-                url 'http://github.com/Mojang/LegacyLauncher'
-            }
-        }
-    }
-
-    doLast {
-        // Purge all annoying files that arent needed
-        repoDir.traverse(type: groovy.io.FileType.FILES, nameFilter: ~/.*\.(xml(?:\.sha1)?|md5)$/) {
-            it.delete()
-        }
-    }
-}
-
-clean << {
-    repoDir.deleteDir()
-}
