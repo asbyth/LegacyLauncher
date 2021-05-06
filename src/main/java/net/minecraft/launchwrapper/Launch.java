@@ -4,18 +4,11 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.logging.log4j.Level;
+import cpw.mods.gross.Java9ClassLoaderUtil;
 
 import java.io.File;
 import java.lang.reflect.Method;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Launch {
     private static final String DEFAULT_TWEAK = "net.minecraft.launchwrapper.VanillaTweaker";
@@ -30,8 +23,7 @@ public class Launch {
     public static LaunchClassLoader classLoader;
 
     private Launch() {
-        final URLClassLoader ucl = (URLClassLoader) getClass().getClassLoader();
-        classLoader = new LaunchClassLoader(ucl.getURLs());
+        classLoader = new LaunchClassLoader(Java9ClassLoaderUtil.getSystemClassPathURLs());
         blackboard = new HashMap<>();
         Thread.currentThread().setContextClassLoader(classLoader);
     }
