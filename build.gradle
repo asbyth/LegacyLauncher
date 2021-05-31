@@ -6,8 +6,9 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven { url "https://libraries.minecraft.net/" }
-    maven { url "https://jitpack.io" }
+    maven {
+        url "https://libraries.minecraft.net/"
+    }
 }
 
 group = "net.minecraft"
@@ -21,7 +22,6 @@ dependencies {
     implementation "org.lwjgl.lwjgl:lwjgl:2.9.1"
     implementation "org.apache.logging.log4j:log4j-core:2.0-beta9"
     implementation "org.apache.logging.log4j:log4j-api:2.0-beta9"
-    implementation "com.github.cpw:grossjava9classpathhacks:1.3"
 }
 
 task sourcesJar(type: Jar) {
@@ -48,13 +48,13 @@ publishing {
         mavenJava(MavenPublication) {
             from components.java
             pom {
-                name = 'LegacyLauncher'
-                url = 'https://github.com/asbyth/LegacyLauncher'
+                name = "LegacyLauncher"
+                url = "https://github.com/asbyth/LegacyLauncher"
 
                 developers {
                     developer {
-                        id = 'LegacyLauncher'
-                        name = 'asbyth'
+                        id = "LegacyLauncher"
+                        name = "asbyth"
                     }
                 }
             }

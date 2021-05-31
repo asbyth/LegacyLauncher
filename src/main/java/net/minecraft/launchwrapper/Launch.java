@@ -3,8 +3,11 @@ package net.minecraft.launchwrapper;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import net.minecraft.launchwrapper.utils.Classpath;
+import net.minecraft.launchwrapper.utils.java8.Java8ClasspathResolver;
+import net.minecraft.launchwrapper.utils.property.PropertyClasspathResolver;
+import net.minecraft.launchwrapper.utils.unsafe.UnsafeClasspathResolver;
 import org.apache.logging.log4j.Level;
-import cpw.mods.gross.Java9ClassLoaderUtil;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -23,7 +26,7 @@ public class Launch {
     public static LaunchClassLoader classLoader;
 
     private Launch() {
-        classLoader = new LaunchClassLoader(Java9ClassLoaderUtil.getSystemClassPathURLs());
+        classLoader = new LaunchClassLoader(Classpath.getClasspath());
         blackboard = new HashMap<>();
         Thread.currentThread().setContextClassLoader(classLoader);
     }
